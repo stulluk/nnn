@@ -16,29 +16,54 @@ jobs:
     strategy:
       matrix:
         include:
+          - platform: linux/amd64
+            arch: x86_64
+            cc: gcc
+            target: nnn-x86_64
+            use_docker: false
           - platform: linux/arm/v7
             arch: arm32
             cc: arm-linux-gnueabihf-gcc
             target: nnn-arm32
+            use_docker: true
+            cross_arch: armhf
+          - platform: linux/arm64
+            arch: arm64
+            cc: aarch64-linux-gnu-gcc
+            target: nnn-arm64
+            use_docker: true
+            cross_arch: arm64
     
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
       
-      - name: Build in Debian container
+      - name: Build x86_64 (native)
+        if: matrix.use_docker == false
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential libncursesw5-dev libgpm-dev
+          make clean
+          make O_STATIC=1 O_NORL=1
+          mv nnn ${{ matrix.target }}
+          file ${{ matrix.target }}
+          ldd ${{ matrix.target }} 2>&1 | grep -q "not a dynamic executable" || echo "Static binary verified"
+      
+      - name: Build ARM (Debian container)
+        if: matrix.use_docker == true
         run: |
           docker run --rm -v ${{ github.workspace }}:/workspace -w /workspace debian:bookworm bash -c "
             apt-get update &&
             apt-get install -y build-essential libncursesw5-dev libgpm-dev &&
-            dpkg --add-architecture arm64 &&
+            dpkg --add-architecture ${{ matrix.cross_arch }} &&
             apt-get update &&
-            apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu &&
-            apt-get install -y libncursesw5-dev:arm64 libgpm-dev:arm64 libtinfo-dev:arm64 &&
+            apt-get install -y gcc-${{ matrix.cc == 'arm-linux-gnueabihf-gcc' && 'arm-linux-gnueabihf' || 'aarch64-linux-gnu' }} g++-${{ matrix.cc == 'arm-linux-gnueabihf-gcc' && 'arm-linux-gnueabihf' || 'aarch64-linux-gnu' }} &&
+            apt-get install -y libncursesw5-dev:${{ matrix.cross_arch }} libgpm-dev:${{ matrix.cross_arch }} libtinfo-dev:${{ matrix.cross_arch }} &&
             make clean &&
-            export CC=aarch64-linux-gnu-gcc &&
-            export PKG_CONFIG=aarch64-linux-gnu-pkg-config &&
-            export PKG_CONFIG_LIBDIR=/usr/lib/aarch64-linux-gnu/pkgconfig &&
-            export LDFLAGS='-static -L/usr/lib/aarch64-linux-gnu' &&
+            export CC=${{ matrix.cc }} &&
+            export PKG_CONFIG=${{ matrix.cc == 'arm-linux-gnueabihf-gcc' && 'arm-linux-gnueabihf-pkg-config' || 'aarch64-linux-gnu-pkg-config' }} &&
+            export PKG_CONFIG_LIBDIR=/usr/lib/${{ matrix.cc == 'arm-linux-gnueabihf-gcc' && 'arm-linux-gnueabihf' || 'aarch64-linux-gnu' }}/pkgconfig &&
+            export LDFLAGS='-static -L/usr/lib/${{ matrix.cc == 'arm-linux-gnueabihf-gcc' && 'arm-linux-gnueabihf' || 'aarch64-linux-gnu' }}' &&
             export LDLIBS='-lncursesw -ltinfo -lpthread -lgpm' &&
             make O_STATIC=1 O_NORL=1 &&
             mv nnn ${{ matrix.target }} &&
@@ -117,4 +142,3 @@ jobs:
           files: release/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
