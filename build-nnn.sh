@@ -40,15 +40,25 @@ build_arch() {
             "
     else
         # Cross-compilation for ARM
+        local pkg_config_name
+        local lib_dir
+        if [ "$cc" = "arm-linux-gnueabihf-gcc" ]; then
+            pkg_config_name="arm-linux-gnueabihf-pkg-config"
+            lib_dir="arm-linux-gnueabihf"
+        else
+            pkg_config_name="aarch64-linux-gnu-pkg-config"
+            lib_dir="aarch64-linux-gnu"
+        fi
+        
         docker run --rm \
             -v "${SCRIPT_DIR}:/workspace" \
             -w /workspace \
             "${IMAGE_NAME}:${IMAGE_TAG}" \
             bash -c "
                 export CC=${cc}
-                export PKG_CONFIG=$([ \"${cc}\" = \"arm-linux-gnueabihf-gcc\" ] && echo \"arm-linux-gnueabihf-pkg-config\" || echo \"aarch64-linux-gnu-pkg-config\")
-                export PKG_CONFIG_LIBDIR=/usr/lib/$([ \"${cc}\" = \"arm-linux-gnueabihf-gcc\" ] && echo \"arm-linux-gnueabihf\" || echo \"aarch64-linux-gnu\")/pkgconfig
-                export LDFLAGS='-static -L/usr/lib/$([ \"${cc}\" = \"arm-linux-gnueabihf-gcc\" ] && echo \"arm-linux-gnueabihf\" || echo \"aarch64-linux-gnu\")'
+                export PKG_CONFIG=${pkg_config_name}
+                export PKG_CONFIG_LIBDIR=/usr/lib/${lib_dir}/pkgconfig
+                export LDFLAGS='-static -L/usr/lib/${lib_dir}'
                 export LDLIBS='-lncursesw -ltinfo -lpthread -lgpm'
                 make clean
                 make O_STATIC=1 O_NORL=1
