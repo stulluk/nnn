@@ -59,13 +59,15 @@ jobs:
             export CC=arm-linux-gnueabihf-gcc
             export PKG_CONFIG=arm-linux-gnueabihf-pkg-config
             export PKG_CONFIG_LIBDIR=/usr/lib/arm-linux-gnueabihf/pkgconfig
-            make O_STATIC=1 O_NORL=1
+            export PKG_CONFIG_SYSROOT_DIR=/
+            make O_STATIC=1 O_NORL=1 || (echo "Build failed, checking error..." && cat Makefile | head -20 && exit 1)
           elif [ "${{ matrix.arch }}" == "arm64" ]; then
             # Cross-compilation for ARM 64-bit
             export CC=aarch64-linux-gnu-gcc
             export PKG_CONFIG=aarch64-linux-gnu-pkg-config
             export PKG_CONFIG_LIBDIR=/usr/lib/aarch64-linux-gnu/pkgconfig
-            make O_STATIC=1 O_NORL=1
+            export PKG_CONFIG_SYSROOT_DIR=/
+            make O_STATIC=1 O_NORL=1 || (echo "Build failed, checking error..." && cat Makefile | head -20 && exit 1)
           fi
           mv nnn ${{ matrix.target }}
           file ${{ matrix.target }}
