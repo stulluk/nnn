@@ -21,7 +21,7 @@ href="https://github.com/jarun/nnn/wiki">Wiki</a>]</h3>
 
 ## 🎯 Purpose of This Fork
 
-This fork contains custom modifications to make nnn file manager faster and more convenient:
+I love nnn and gdu. I wanted to be able to delete files with d key like gdu in nnn. Additionally, I wanted to have statically built binary releases, so that anybody can benefit from it without building. Also, to be able to build latest nnn with this functionality locally, I created a dockerfile and dockerbuild.sh script which creates the Docker container for building, and build-nnn.sh for building statically compiled nnn for x86_64, arm32 and arm64.
 
 ### Changes Made
 
@@ -45,16 +45,64 @@ This fork contains custom modifications to make nnn file manager faster and more
 
 ---
 
-## 📦 Static Compilation and Installation
+## 📦 Building and Installation
 
-### Requirements
+### Option 1: Download Pre-built Binaries (Recommended)
+
+Pre-built statically compiled binaries are available in the [Releases](https://github.com/stulluk/nnn/releases) section for:
+- **x86_64** (Linux AMD64)
+- **arm32** (ARM 32-bit)
+- **arm64** (ARM 64-bit)
+
+Simply download the appropriate binary for your architecture, make it executable, and use it:
+
+```bash
+# Download the binary (example for x86_64)
+wget https://github.com/stulluk/nnn/releases/download/v5.1-custom/nnn-x86_64
+
+# Make it executable
+chmod +x nnn-x86_64
+
+# Install (optional)
+sudo cp nnn-x86_64 /usr/bin/nnn
+```
+
+### Option 2: Build Locally with Docker (Recommended for Building)
+
+This is the easiest way to build statically compiled binaries for all architectures locally.
+
+#### Prerequisites
+
+- Docker installed on your system
+
+#### Build Steps
+
+1. **Build the Docker container:**
+   ```bash
+   ./dockerbuild.sh
+   ```
+
+2. **Build statically compiled binaries for all architectures:**
+   ```bash
+   ./build-nnn.sh
+   ```
+
+   This will create binaries in the `build-output/` directory:
+   - `nnn-x86_64` - for x86_64 systems
+   - `nnn-arm32` - for ARM 32-bit systems
+   - `nnn-arm64` - for ARM 64-bit systems
+   - SHA256 checksum files for each binary
+
+### Option 3: Manual Static Compilation
+
+#### Requirements
 
 ```bash
 sudo apt-get update
 sudo apt-get install -y build-essential libncursesw5-dev libgpm-dev git
 ```
 
-### Static Compilation
+#### Static Compilation
 
 ```bash
 # Clone the repository
@@ -72,7 +120,7 @@ file nnn  # Should show "statically linked"
 ldd nnn   # Should show "not a dynamic executable"
 ```
 
-### Installation
+#### Installation
 
 ```bash
 # Backup existing nnn (optional)
