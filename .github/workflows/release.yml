@@ -38,6 +38,8 @@ jobs:
             export CC=arm-linux-gnueabihf-gcc &&
             export PKG_CONFIG=arm-linux-gnueabihf-pkg-config &&
             export PKG_CONFIG_LIBDIR=/usr/lib/arm-linux-gnueabihf/pkgconfig &&
+            export LDFLAGS='-static -L/usr/lib/arm-linux-gnueabihf' &&
+            export LDLIBS='-lncursesw -ltinfo -lpthread -lgpm' &&
             make O_STATIC=1 O_NORL=1 &&
             mv nnn ${{ matrix.target }} &&
             file ${{ matrix.target }} &&
