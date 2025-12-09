@@ -33,9 +33,11 @@ jobs:
             dpkg --add-architecture armhf &&
             apt-get update &&
             apt-get install -y gcc-arm-linux-gnueabihf g++-arm-linux-gnueabihf &&
-            apt-get install -y libncursesw5-dev:armhf libgpm-dev:armhf &&
+            apt-get install -y libncursesw5-dev:armhf libgpm-dev:armhf libtinfo-dev:armhf &&
             make clean &&
             export CC=arm-linux-gnueabihf-gcc &&
+            export PKG_CONFIG=arm-linux-gnueabihf-pkg-config &&
+            export PKG_CONFIG_LIBDIR=/usr/lib/arm-linux-gnueabihf/pkgconfig &&
             make O_STATIC=1 O_NORL=1 &&
             mv nnn ${{ matrix.target }} &&
             file ${{ matrix.target }} &&
