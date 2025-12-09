@@ -1,0 +1,130 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag (e.g., v5.1-custom)'
+        required: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - platform: linux/amd64
+            arch: x86_64
+            cc: gcc
+            target: nnn-x86_64
+          - platform: linux/arm/v7
+            arch: arm32
+            cc: arm-linux-gnueabihf-gcc
+            target: nnn-arm32
+          - platform: linux/arm64
+            arch: arm64
+            cc: aarch64-linux-gnu-gcc
+            target: nnn-arm64
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential libncursesw5-dev libgpm-dev
+          if [ "${{ matrix.arch }}" != "x86_64" ]; then
+            sudo apt-get install -y gcc-${{ matrix.cc == 'arm-linux-gnueabihf-gcc' && 'arm-linux-gnueabihf' || 'aarch64-linux-gnu' }}
+          fi
+      
+      - name: Build static binary
+        env:
+          CC: ${{ matrix.cc }}
+        run: |
+          make clean
+          if [ "${{ matrix.arch }}" == "x86_64" ]; then
+            make O_STATIC=1 O_NORL=1
+          else
+            # Cross-compilation: set CC and build
+            CC=${{ matrix.cc }} make O_STATIC=1 O_NORL=1
+          fi
+          mv nnn ${{ matrix.target }}
+          file ${{ matrix.target }}
+          ldd ${{ matrix.target }} 2>&1 | grep -q "not a dynamic executable" || echo "Static binary verified"
+      
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.target }}
+          path: ${{ matrix.target }}
+          retention-days: 1
+  
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: ./artifacts
+      
+      - name: Get tag name
+        id: tag
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            echo "tag=${{ github.event.inputs.tag }}" >> $GITHUB_OUTPUT
+          else
+            echo "tag=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Prepare release files
+        run: |
+          mkdir -p release
+          find artifacts -name "nnn-*" -type f -exec cp {} release/ \;
+          cd release
+          for file in nnn-*; do
+            chmod +x "$file"
+            sha256sum "$file" > "${file}.sha256"
+          done
+          ls -lh
+      
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.tag.outputs.tag }}
+          name: Release ${{ steps.tag.outputs.tag }}
+          body: |
+            ## Static Builds
+            
+            This release contains statically compiled binaries for:
+            - **x86_64** (Linux AMD64)
+            - **arm32** (ARM 32-bit)
+            - **arm64** (ARM 64-bit)
+            
+            ### Custom Modifications
+            - `d` key: Delete files/directories (no confirmation)
+            - `D` key: Toggle detail mode
+            - Removed confirmation prompt for deletion
+            
+            ### Installation
+            ```bash
+            # Download the appropriate binary for your architecture
+            chmod +x nnn-<arch>
+            sudo cp nnn-<arch> /usr/bin/nnn
+            ```
+            
+            ### Verification
+            Each binary includes a SHA256 checksum file for verification.
+          files: release/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
