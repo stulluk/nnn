@@ -202,8 +202,8 @@ static struct key bindings[] = {
 	{ CONTROL('N'),   SEL_MFLTR },
 	/* Toggle hide .dot files */
 	{ '.',            SEL_HIDDEN },
-	/* Detailed listing */
-	{ 'd',            SEL_DETAIL },
+	/* Delete file/directory (changed from detail mode) */
+	{ 'd',            SEL_RM_RF },
 	/* File details */
 	{ 'f',            SEL_STATS },
 	{ CONTROL('F'),   SEL_STATS },
@@ -240,6 +240,8 @@ static struct key bindings[] = {
 	{ 'x',            SEL_TRASH },
 	{ CONTROL('X'),   SEL_TRASH },
 	{ 'X',            SEL_RM_RF },
+	/* Detail mode (moved from 'd' to 'D') */
+	{ 'D',            SEL_DETAIL },
 	/* Open in a custom application */
 	{ 'o',            SEL_OPENWITH },
 	{ CONTROL('O'),   SEL_OPENWITH },

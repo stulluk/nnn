@@ -1578,47 +1578,11 @@ static uint_t entries_in_file(int fd, char *buf, size_t buflen, const char delim
 	return ((len < 0) ? 0 : ((delim != NUL_CHAR) ? count : ++count));
 }
 
-static char confirm_force(bool selection, bool use_trash)
+static char confirm_force(__attribute__((unused)) bool selection, __attribute__((unused)) bool use_trash)
 {
-	char str[300];
-
-	/* Count selection from file when nothing is selected */
-	if (selection && (nselected == 0)) {
-		int fd = open(selpath, O_RDONLY);
-
-		if (fd != -1) {
-			nselected = entries_in_file(fd, str, 300, NUL_CHAR);
-			close(fd);
-		} else {
-			printwarn(NULL);
-			return '\0';
-		}
-	}
-
-	/* Note: ideally we should use utils[UTIL_RM_RF] instead of the "rm -rf" string */
-	int r = snprintf(str, 20, "%s", use_trash ? utils[UTIL_GIO_TRASH] + 4 : "rm -rf");
-
-	if (selection) {
-		snprintf(str + r, 280, " %d file(s)?", nselected);
-		r = get_input(str);
-
-		/* Double confirm on removal of more than 10 files */
-		if (!use_trash && (nselected > RM_RECONFIRM) && (r == 'y' || r == 'Y')) {
-			snprintf(str, 300, "Are you sure?");
-			r = get_input(str);
-		}
-	} else {
-		snprintf(str + r, 280, " '%s'?", pdents[cur].name);
-		r = get_input(str);
-	}
-
-	if (r == ESC)
-		return '\0'; /* cancel */
-	if (r == 'y' || r == 'Y')
-		return 'f'; /* forceful for rm */
-	if (r == 'n' || r == 'N')
-		return '\0'; /* cancel */
-	return (use_trash ? '\0' : 'i'); /* interactive for rm */
+	/* Skip confirmation - directly return 'f' for forceful removal */
+	/* This allows deletion without confirmation prompt */
+	return 'f'; /* forceful for rm */
 }
 
 /* Writes buflen char(s) from buf to a file */

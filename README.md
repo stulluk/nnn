@@ -17,6 +17,95 @@ href="https://github.com/jarun/nnn#quickstart">Quickstart</a>] [<a
 href="https://github.com/jarun/nnn/tree/master/plugins#nnn-plugins">Plugins</a>] [<a
 href="https://github.com/jarun/nnn/wiki">Wiki</a>]</h3>
 
+---
+
+## 🎯 Purpose of This Fork
+
+This fork contains custom modifications to make nnn file manager faster and more convenient:
+
+### Changes Made
+
+1. **`d` key is now used for deletion**
+   - The `d` key, previously used for detail mode toggle, is now used for file/directory deletion
+   - Deletes directly without confirmation prompt (for quick deletion)
+
+2. **Detail mode moved to `D` (capital D) key**
+   - Use the `D` key to show/hide file sizes
+
+3. **Confirmation mechanism removed**
+   - Deletion operations do not ask for confirmation, deletes directly
+   - ⚠️ **Warning:** Use with caution to avoid accidental deletion!
+
+### Usage
+
+- **`d`** → Delete file/directory (no confirmation)
+- **`D`** → Toggle detail mode (show/hide file sizes)
+- **`x`** → Send to trash (unchanged)
+- **`X`** → Permanent delete (unchanged)
+
+---
+
+## 📦 Static Compilation and Installation
+
+### Requirements
+
+```bash
+sudo apt-get update
+sudo apt-get install -y build-essential libncursesw5-dev libgpm-dev git
+```
+
+### Static Compilation
+
+```bash
+# Clone the repository
+git clone https://github.com/stulluk/nnn.git
+cd nnn
+
+# Clean build
+make clean
+
+# Static compilation (without readline)
+make O_STATIC=1 O_NORL=1
+
+# Verify the binary
+file nnn  # Should show "statically linked"
+ldd nnn   # Should show "not a dynamic executable"
+```
+
+### Installation
+
+```bash
+# Backup existing nnn (optional)
+sudo mv /usr/bin/nnn /usr/bin/nnn.backup
+
+# Install the new binary
+sudo cp nnn /usr/bin/nnn
+sudo chmod +x /usr/bin/nnn
+```
+
+### Adding to Bashrc
+
+Add the following alias to your `~/.bashrc` file:
+
+```bash
+alias nnn='NNN_TRASH=1 nnn -T d -e -i'
+```
+
+This alias:
+- `NNN_TRASH=1`: Sends deleted files to trash (for safety)
+- `-T d`: Starts in detail mode (shows file sizes)
+- `-e`: Opens text files in terminal
+- `-i`: Shows file information
+
+To apply the changes:
+```bash
+source ~/.bashrc
+```
+
+or open a new terminal.
+
+---
+
 `nnn` (_n³_) is a full-featured terminal file manager. It's tiny, nearly 0-config and [incredibly fast](https://github.com/jarun/nnn/wiki/Performance).
 
 It is designed to be unobtrusive with smart workflows to match the trains of thought.
