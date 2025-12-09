@@ -39,12 +39,16 @@ jobs:
           sudo apt-get install -y build-essential libncursesw5-dev libgpm-dev
           if [ "${{ matrix.arch }}" == "arm32" ]; then
             sudo dpkg --add-architecture armhf
-            sudo apt-get update
+            # Disable security repo for armhf to avoid 404 errors
+            sudo sed -i 's|deb.*security.ubuntu.com.*noble.*main|# &|' /etc/apt/sources.list.d/*.list 2>/dev/null || true
+            sudo apt-get update --allow-releaseinfo-change || sudo apt-get update
             sudo apt-get install -y gcc-arm-linux-gnueabihf g++-arm-linux-gnueabihf
             sudo apt-get install -y libncursesw5-dev:armhf libgpm-dev:armhf
           elif [ "${{ matrix.arch }}" == "arm64" ]; then
             sudo dpkg --add-architecture arm64
-            sudo apt-get update
+            # Disable security repo for arm64 to avoid 404 errors
+            sudo sed -i 's|deb.*security.ubuntu.com.*noble.*main|# &|' /etc/apt/sources.list.d/*.list 2>/dev/null || true
+            sudo apt-get update --allow-releaseinfo-change || sudo apt-get update
             sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu
             sudo apt-get install -y libncursesw5-dev:arm64 libgpm-dev:arm64
           fi
