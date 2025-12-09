@@ -33,6 +33,8 @@ build_arch() {
             "${IMAGE_NAME}:${IMAGE_TAG}" \
             bash -c "
                 make clean
+                export LDFLAGS='-static'
+                export LDLIBS='-lncursesw -ltinfo -lpthread -lgpm'
                 make O_STATIC=1 O_NORL=1
                 mv nnn ${target}
                 file ${target}
