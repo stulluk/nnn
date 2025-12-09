@@ -50,10 +50,14 @@ jobs:
             make O_STATIC=1 O_NORL=1
           elif [ "${{ matrix.arch }}" == "arm32" ]; then
             # Cross-compilation for ARM 32-bit
-            CC=arm-linux-gnueabihf-gcc make O_STATIC=1 O_NORL=1
+            export CC=arm-linux-gnueabihf-gcc
+            export PKG_CONFIG_LIBDIR=/usr/lib/arm-linux-gnueabihf/pkgconfig
+            make O_STATIC=1 O_NORL=1
           elif [ "${{ matrix.arch }}" == "arm64" ]; then
             # Cross-compilation for ARM 64-bit
-            CC=aarch64-linux-gnu-gcc make O_STATIC=1 O_NORL=1
+            export CC=aarch64-linux-gnu-gcc
+            export PKG_CONFIG_LIBDIR=/usr/lib/aarch64-linux-gnu/pkgconfig
+            make O_STATIC=1 O_NORL=1
           fi
           mv nnn ${{ matrix.target }}
           file ${{ matrix.target }}
