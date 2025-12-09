@@ -60,28 +60,14 @@ jobs:
             export PKG_CONFIG=arm-linux-gnueabihf-pkg-config
             export PKG_CONFIG_LIBDIR=/usr/lib/arm-linux-gnueabihf/pkgconfig
             export PKG_CONFIG_SYSROOT_DIR=/
-            # Try to build, if pkg-config fails, use manual flags
-            if ! make O_STATIC=1 O_NORL=1 2>&1; then
-              echo "pkg-config failed, trying manual flags..."
-              export CFLAGS="-I/usr/arm-linux-gnueabihf/include"
-              export LDFLAGS="-static -L/usr/arm-linux-gnueabihf/lib"
-              export LDLIBS="-lncursesw -ltinfo -lpthread -lgpm"
-              make O_STATIC=1 O_NORL=1 CFLAGS="$CFLAGS" LDFLAGS="$LDFLAGS" LDLIBS="$LDLIBS"
-            fi
+            make O_STATIC=1 O_NORL=1 CC=arm-linux-gnueabihf-gcc PKG_CONFIG=arm-linux-gnueabihf-pkg-config
           elif [ "${{ matrix.arch }}" == "arm64" ]; then
             # Cross-compilation for ARM 64-bit
             export CC=aarch64-linux-gnu-gcc
             export PKG_CONFIG=aarch64-linux-gnu-pkg-config
             export PKG_CONFIG_LIBDIR=/usr/lib/aarch64-linux-gnu/pkgconfig
             export PKG_CONFIG_SYSROOT_DIR=/
-            # Try to build, if pkg-config fails, use manual flags
-            if ! make O_STATIC=1 O_NORL=1 2>&1; then
-              echo "pkg-config failed, trying manual flags..."
-              export CFLAGS="-I/usr/aarch64-linux-gnu/include"
-              export LDFLAGS="-static -L/usr/aarch64-linux-gnu/lib"
-              export LDLIBS="-lncursesw -ltinfo -lpthread -lgpm"
-              make O_STATIC=1 O_NORL=1 CFLAGS="$CFLAGS" LDFLAGS="$LDFLAGS" LDLIBS="$LDLIBS"
-            fi
+            make O_STATIC=1 O_NORL=1 CC=aarch64-linux-gnu-gcc PKG_CONFIG=aarch64-linux-gnu-pkg-config
           fi
           mv nnn ${{ matrix.target }}
           file ${{ matrix.target }}
