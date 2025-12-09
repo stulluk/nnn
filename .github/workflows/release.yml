@@ -37,20 +37,23 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y build-essential libncursesw5-dev libgpm-dev
-          if [ "${{ matrix.arch }}" != "x86_64" ]; then
-            sudo apt-get install -y gcc-${{ matrix.cc == 'arm-linux-gnueabihf-gcc' && 'arm-linux-gnueabihf' || 'aarch64-linux-gnu' }}
+          if [ "${{ matrix.arch }}" == "arm32" ]; then
+            sudo apt-get install -y gcc-arm-linux-gnueabihf libncursesw5-dev:armhf libgpm-dev:armhf
+          elif [ "${{ matrix.arch }}" == "arm64" ]; then
+            sudo apt-get install -y gcc-aarch64-linux-gnu libncursesw5-dev:arm64 libgpm-dev:arm64
           fi
       
       - name: Build static binary
-        env:
-          CC: ${{ matrix.cc }}
         run: |
           make clean
           if [ "${{ matrix.arch }}" == "x86_64" ]; then
             make O_STATIC=1 O_NORL=1
-          else
-            # Cross-compilation: set CC and build
-            CC=${{ matrix.cc }} make O_STATIC=1 O_NORL=1
+          elif [ "${{ matrix.arch }}" == "arm32" ]; then
+            # Cross-compilation for ARM 32-bit
+            CC=arm-linux-gnueabihf-gcc make O_STATIC=1 O_NORL=1
+          elif [ "${{ matrix.arch }}" == "arm64" ]; then
+            # Cross-compilation for ARM 64-bit
+            CC=aarch64-linux-gnu-gcc make O_STATIC=1 O_NORL=1
           fi
           mv nnn ${{ matrix.target }}
           file ${{ matrix.target }}
