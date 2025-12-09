@@ -16,10 +16,10 @@ jobs:
     strategy:
       matrix:
         include:
-          - platform: linux/amd64
-            arch: x86_64
-            cc: gcc
-            target: nnn-x86_64
+          - platform: linux/arm/v7
+            arch: arm32
+            cc: arm-linux-gnueabihf-gcc
+            target: nnn-arm32
     
     steps:
       - name: Checkout code
@@ -29,10 +29,15 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y build-essential libncursesw5-dev libgpm-dev
+          sudo dpkg --add-architecture armhf
+          sudo apt-get update
+          sudo apt-get install -y gcc-arm-linux-gnueabihf g++-arm-linux-gnueabihf
+          sudo apt-get install -y libncursesw5-dev:armhf libgpm-dev:armhf
       
       - name: Build static binary
         run: |
           make clean
+          export CC=arm-linux-gnueabihf-gcc
           make O_STATIC=1 O_NORL=1
           mv nnn ${{ matrix.target }}
           file ${{ matrix.target }}
